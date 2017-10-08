@@ -33,7 +33,7 @@ def linearKernel(x, y):
 def polynomialKernel(x, y, p = 3):
     return (x.dot(y) +1)**p
 
-def radialBasisKernel(x, y, sigma = 1.5):
+def radialBasisKernel(x, y, sigma = 1):
     return math.exp(  - euclidDist(x,y)  /  (2 * (sigma ** 2)) )
     
 
@@ -51,41 +51,7 @@ def plot(x):
     colors=("red", "black", "blue"), linewidths=(1, 3, 1))
 
 
-def main(N, kernel, useSlack = True, slackCoeff = 1):
-    # Random data
-    
-    # numpy.random.seed(100)
-    classA = [ (random.normalvariate(-1.5, 1),
-                random.normalvariate(0.5, 1),
-                1.0) for i in range (N/4) ] + \
-            [ ( random.normalvariate(1.5, 1),
-               random.normalvariate(0.5, 1),
-               1.0) for i in range (N/4) ]
-    classB = [ ( random.normalvariate(0.0, 0.5),
-                random.normalvariate(-0.5, 0.5),
-                -1.0) for i in range (N/2) ]
-    data = classA + classB
-    
-    # Show data
-    
-    pylab.hold(True)
-    pylab.plot( [p[0] for p in classA],
-                [p[1] for p in classA],
-                'bo')
-    pylab.plot( [p[0] for p in classB],
-                [p[1] for p in classB],
-                'ro')
-    pylab.show()
-    
-    random.shuffle(data)
-    
-    
-    arrayClassA = numpy.array([[row[0], row[1]] for row in classA])
-    arrayClassB = numpy.array([[row[0], row[1]] for row in classB])
-    
-    X = numpy.array([[row[0], row[1]] for row in data])
-    t = numpy.array([row[2] for row in data])
-    
+def main(X, t, arrayClassA, arrayClassB, N, kernel, useSlack = True, slackCoeff = 1):    
     # Create P
     P = createP(X, t, kernel)
     
@@ -129,7 +95,27 @@ def main(N, kernel, useSlack = True, slackCoeff = 1):
 # End main
 
 
-for kernel in [linearKernel, polynomialKernel, radialBasisKernel]:
-    for N in [20, 100]:
-        main(N, kernel, False)
-        main(N, kernel, True)
+numpy.random.seed(100)
+
+for N in [20, 100, 1000]:
+    classA = [ (random.normalvariate(-1.5, 1),
+                random.normalvariate(0.5, 1),
+                1.0) for i in range (N/4) ] + \
+            [ ( random.normalvariate(1.5, 1),
+               random.normalvariate(0.5, 1),
+               1.0) for i in range (N/4) ]
+    classB = [ ( random.normalvariate(0.0, 0.5),
+                random.normalvariate(-0.5, 0.5),
+                -1.0) for i in range (N/2) ]
+    data = classA + classB
+    
+    random.shuffle(data)
+    
+    arrayClassA = numpy.array([[row[0], row[1]] for row in classA])
+    arrayClassB = numpy.array([[row[0], row[1]] for row in classB])
+    
+    X = numpy.array([[row[0], row[1]] for row in data])
+    t = numpy.array([row[2] for row in data])
+    for kernel in [linearKernel, polynomialKernel, radialBasisKernel]:
+        main(X, t, arrayClassA, arrayClassB, N, kernel, False)
+        main(X, t, arrayClassA, arrayClassB, N, kernel, True)
