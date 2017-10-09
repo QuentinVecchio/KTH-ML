@@ -35,6 +35,9 @@ def polynomialKernel(x, y, p = 3):
 
 def radialBasisKernel(x, y, sigma = 1):
     return math.exp(  - euclidDist(x,y)  /  (2 * (sigma ** 2)) )
+
+def sigmoidKernel(x, y, k = 0.1, delta = 0.01):
+    return math.tanh(k * x.transpose().dot(y) - delta)
     
 
 
@@ -97,7 +100,7 @@ def main(X, t, arrayClassA, arrayClassB, N, kernel, useSlack = True, slackCoeff 
 
 numpy.random.seed(100)
 
-for N in [20, 100, 1000]:
+for N in [20, 100]:
     classA = [ (random.normalvariate(-1.5, 1),
                 random.normalvariate(0.5, 1),
                 1.0) for i in range (N/4) ] + \
@@ -116,6 +119,6 @@ for N in [20, 100, 1000]:
     
     X = numpy.array([[row[0], row[1]] for row in data])
     t = numpy.array([row[2] for row in data])
-    for kernel in [linearKernel, polynomialKernel, radialBasisKernel]:
+    for kernel in [sigmoidKernel]:
         main(X, t, arrayClassA, arrayClassB, N, kernel, False)
         main(X, t, arrayClassA, arrayClassB, N, kernel, True)
