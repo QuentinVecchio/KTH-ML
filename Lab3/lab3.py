@@ -44,7 +44,10 @@ def computePrior(labels, W=None):
 
     # TODO: compute the values of prior for each class!
     # ==========================
-    
+    for x in classes:
+        idx = np.where(labels==x)[0]
+        Nk = float(idx.sum())
+        prior[x] = Nk/Npts
     # ==========================
 
     return prior
@@ -68,7 +71,12 @@ def mlParams(X, labels, W=None):
 
     # TODO: fill in the code to compute mu and sigma!
     # ==========================
-    
+    for x in classes:
+        idx = np.where(labels==x)[0]
+        Nk = float(idx.sum())
+        mu[x] = np.sum(X[idx], axis=0)/Nk
+        for i in range(0, Ndims):
+            sigma[x][i][i] = np.sum((X[idx][i] - mu[x][i]) * (X[idx][i] - mu[x][i]))/Nk
     # ==========================
 
     return mu, sigma
@@ -83,10 +91,13 @@ def classifyBayes(X, prior, mu, sigma):
     Npts = X.shape[0]
     Nclasses,Ndims = np.shape(mu)
     logProb = np.zeros((Nclasses, Npts))
+        
 
     # TODO: fill in the code to compute the log posterior logProb!
     # ==========================
-    
+    for i in range(0, Nclasses):
+        for j in range(0, Npts):
+            logProb[i][j] = - np.log(np.linalg.det(sigma[i]))/2. - np.dot(np.dot((X[j] - mu[i]), np.linalg.inv(sigma[i])), (X[j] - mu[i]).transpose()) / 2. + np.log(prior[i])
     # ==========================
     
     # one possible way of finding max a-posteriori once
@@ -127,15 +138,15 @@ plotGaussian(X,labels,mu,sigma)
 # Call the `testClassifier` and `plotBoundary` functions for this part.
 
 
-#testClassifier(BayesClassifier(), dataset='iris', split=0.7)
+testClassifier(BayesClassifier(), dataset='iris', split=0.7)
 
 
 
-#testClassifier(BayesClassifier(), dataset='vowel', split=0.7)
+testClassifier(BayesClassifier(), dataset='vowel', split=0.7)
 
 
 
-#plotBoundary(BayesClassifier(), dataset='iris',split=0.7)
+plotBoundary(BayesClassifier(), dataset='iris',split=0.7)
 
 
 # ## Boosting functions to implement
