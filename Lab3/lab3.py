@@ -71,12 +71,18 @@ def mlParams(X, labels, W=None):
 
     # TODO: fill in the code to compute mu and sigma!
     # ==========================
+    #for x in classes:
+        #idx = np.where(labels==x)[0]
+        #Nk = float(idx.size)
+        #mu[x] = np.sum(X[idx], axis=0)/Nk
+        #for i in range(0, Ndims):
+            #sigma[x][i][i] = np.sum((X[idx][i] - mu[x][i]) * (X[idx][i] - mu[x][i]))/Nk
     for x in classes:
         idx = np.where(labels==x)[0]
-        Nk = float(idx.sum())
-        mu[x] = np.sum(X[idx], axis=0)/Nk
+        Nk = float(idx.size)
+        mu[x] = np.sum(W[idx] * X[idx], axis=0)/np.sum(W[idx])
         for i in range(0, Ndims):
-            sigma[x][i][i] = np.sum((X[idx][i] - mu[x][i]) * (X[idx][i] - mu[x][i]))/Nk
+            sigma[x][i][i] = np.sum((X[idx][i] - mu[x][i]) * (X[idx][i] - mu[x][i]))/np.sum(W[idx])
     # ==========================
 
     return mu, sigma
@@ -99,10 +105,12 @@ def classifyBayes(X, prior, mu, sigma):
         for j in range(0, Npts):
             logProb[i][j] = - np.log(np.linalg.det(sigma[i]))/2. - np.dot(np.dot((X[j] - mu[i]), np.linalg.inv(sigma[i])), (X[j] - mu[i]).transpose()) / 2. + np.log(prior[i])
     # ==========================
-    
+
     # one possible way of finding max a-posteriori once
     # you have computed the log posterior
+
     h = np.argmax(logProb,axis=0)
+    
     return h
 
 
