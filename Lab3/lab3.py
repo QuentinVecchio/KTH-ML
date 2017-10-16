@@ -21,6 +21,7 @@ from scipy import misc
 from imp import reload
 from labfuns import *
 import random
+import math
 
 
 # ## Bayes classifier functions to implement
@@ -39,6 +40,8 @@ def computePrior(labels, W=None):
         assert(W.shape[0] == Npts)
     classes = np.unique(labels)
     Nclasses = np.size(classes)
+    
+    total = W.sum()
 
     prior = np.zeros((Nclasses,1))
 
@@ -46,8 +49,8 @@ def computePrior(labels, W=None):
     # ==========================
     for x in classes:
         idx = np.where(labels==x)[0]
-        Nk = float(idx.sum())
-        prior[x] = Nk/Npts
+        Nk = float(np.sum(W[idx]))
+        prior[x] = Nk/total
     # ==========================
 
     return prior
@@ -82,7 +85,7 @@ def mlParams(X, labels, W=None):
         Nk = float(idx.size)
         mu[x] = np.sum(W[idx] * X[idx], axis=0)/np.sum(W[idx])
         for i in range(0, Ndims):
-            sigma[x][i][i] = np.sum((X[idx][i] - mu[x][i]) * (X[idx][i] - mu[x][i]))/np.sum(W[idx])
+            sigma[x][i][i] = np.sum(W[idx]*(X[idx][i] - mu[x][i]) * (X[idx][i] - mu[x][i]))/np.sum(W[idx])
     # ==========================
 
     return mu, sigma
@@ -138,9 +141,9 @@ class BayesClassifier(object):
 # Call `genBlobs` and `plotGaussian` to verify your estimates.
 
 
-X, labels = genBlobs(centers=5)
-mu, sigma = mlParams(X,labels)
-plotGaussian(X,labels,mu,sigma)
+#X, labels = genBlobs(centers=5)
+#mu, sigma = mlParams(X,labels)
+#plotGaussian(X,labels,mu,sigma)
 
 
 # Call the `testClassifier` and `plotBoundary` functions for this part.
@@ -150,7 +153,7 @@ testClassifier(BayesClassifier(), dataset='iris', split=0.7)
 
 
 
-testClassifier(BayesClassifier(), dataset='vowel', split=0.7)
+#testClassifier(BayesClassifier(), dataset='vowel', split=0.7)
 
 
 
@@ -187,11 +190,34 @@ def trainBoost(base_classifier, X, labels, T=10):
 
         # TODO: Fill in the rest, construct the alphas etc.
         # ==========================
+        error = 0
+        for i, value in enumerate(vote):
+            error += wCur[i]*(1-delta(value, labels[i]))
+
+        alpha = (math.log(1-error) - math.log(error)) / 2.
         
-        # alphas.append(alpha) # you will need to append the new alpha
+        for j_iter in range(wCur.size):
+            wCur[j_iter] = wCur[j_iter] * expAlpha(vote[j_iter], labels[j_iter], alpha)
+        
+        wCur = wCur / wCur.sum()
+
+        alphas.append(alpha)
         # ==========================
-        
+
     return classifiers, alphas
+
+
+def delta(x, c):
+    if x == c:
+        return 1
+    return 0
+
+def expAlpha(x, c, alpha):
+    if x == c:
+        return math.exp(-alpha)
+    else:
+        return math.exp(alpha)
+
 
 # in:       X - N x d matrix of N data points
 # classifiers - (maximum) length T Python list of trained classifiers as above
@@ -211,7 +237,9 @@ def classifyBoost(X, classifiers, alphas, Nclasses):
         # TODO: implement classificiation when we have trained several classifiers!
         # here we can do it by filling in the votes vector with weighted votes
         # ==========================
-        
+        for idx, value in enumerate(X):
+            for idx_cl, cl in enumerate(classifiers):
+                votes[idx][cl.classify(value)] += alphas[idx_cl]
         # ==========================
 
         # one way to compute yPred after accumulating the votes
@@ -244,7 +272,7 @@ class BoostClassifier(object):
 # Call the `testClassifier` and `plotBoundary` functions for this part.
 
 
-#testClassifier(BoostClassifier(BayesClassifier(), T=10), dataset='iris',split=0.7)
+testClassifier(BoostClassifier(BayesClassifier(), T=10), dataset='iris',split=0.7)
 
 
 
@@ -252,7 +280,7 @@ class BoostClassifier(object):
 
 
 
-#plotBoundary(BoostClassifier(BayesClassifier()), dataset='iris',split=0.7)
+plotBoundary(BoostClassifier(BayesClassifier()), dataset='iris',split=0.7)
 
 
 # Now repeat the steps with a decision tree classifier.
